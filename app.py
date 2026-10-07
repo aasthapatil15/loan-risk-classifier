@@ -34,22 +34,44 @@ df = load_data()
 X = df[["Income", "CreditScore", "LoanAmount"]]
 y = df["Approved"]
 
-# 2. Split: 80% Train (4,000), 20% Test (1,000)
+# 2. View & Inspect the Dataset Section
+with st.expander("📁 View & Inspect Dataset (5,000 Rows)"):
+    st.write("Preview of the generated dataset:")
+    st.dataframe(df, use_container_width=True)
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.write("**Dataset Summary Statistics:**")
+        st.dataframe(df.describe())
+    with col_b:
+        st.write("**Class Distribution (Approved vs. Rejected):**")
+        st.write(df["Approved"].value_counts().rename({1: "Approved (1)", 0: "Rejected (0)"}))
+        
+        # Download button to download the 5000 records as CSV
+        csv_data = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Dataset as CSV",
+            data=csv_data,
+            file_name="loan_dataset_5000.csv",
+            mime="text/csv"
+        )
+
+# 3. Split: 80% Train (4,000), 20% Test (1,000)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 3. Train models
+# 4. Train models
 dt_model = DecisionTreeClassifier(max_depth=4, random_state=42).fit(X_train, y_train)
 nb_model = GaussianNB().fit(X_train, y_train)
 
 dt_acc = accuracy_score(y_test, dt_model.predict(X_test))
 nb_acc = accuracy_score(y_test, nb_model.predict(X_test))
 
-# 4. Streamlit UI
+# 5. Model Evaluation and Predictor UI
 col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("📊 Model Performance (5,000 Samples)")
-    st.info(f"Dataset Size: **{len(df):,} records** (Train: {len(X_train):,}, Test: {len(X_test):,})")
+    st.info(f"Total Dataset: **{len(df):,} records** | Train: **{len(X_train):,}** | Test: **{len(X_test):,}**")
     
     st.metric(label="Decision Tree Accuracy", value=f"{dt_acc * 100:.1f}%")
     st.metric(label="Naive Bayes Accuracy", value=f"{nb_acc * 100:.1f}%")
